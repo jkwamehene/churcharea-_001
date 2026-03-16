@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Church Area — VCMIS</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0a1f44;--blue:#1a56db;--blue2:#1e40af;--cyan:#0ea5e9;
+  --bg:#f8fafc;--white:#ffffff;--border:#e2e8f0;--border2:#cbd5e1;
+  --text:#0f172a;--text2:#334155;--muted:#64748b;--dim:#94a3b8;
+  --green:#059669;--green-lt:#ecfdf5;--green-dk:#065f46;
+  --red:#dc2626;--red-lt:#fef2f2;--red-dk:#991b1b;
+  --amber:#d97706;--amber-lt:#fffbeb;--amber-dk:#92400e;
+  --r:8px;--r-lg:12px;--r-xl:18px;
+  --sh:0 1px 3px rgba(0,0,0,.06),0 1px 8px rgba(0,0,0,.04);
+  --sh-lg:0 4px 20px rgba(0,0,0,.08);
+  --sh-xl:0 8px 36px rgba(0,0,0,.10);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── Topbar ── */
+.topbar{background:#fff;height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;border-bottom:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.04);position:sticky;top:0;z-index:50}
+.tb-brand{display:flex;align-items:center;gap:10px}
+.tb-logo{width:32px;height:32px;border-radius:8px;background:#f8fafc;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px}
+.tb-name{font-size:14px;font-weight:600;color:var(--text);letter-spacing:-.01em}
+.tb-name span{color:var(--muted);font-weight:400}
+.tb-nav{display:flex;align-items:center;gap:2px}
+.tb-nav a{font-size:13px;font-weight:500;color:var(--muted);text-decoration:none;padding:6px 12px;border-radius:var(--r);transition:all .15s}
+.tb-nav a:hover{background:#f1f5f9;color:var(--text)}
+.tb-nav a.active{background:#f1f5f9;color:var(--text)}
+.tb-right{display:flex;align-items:center;gap:12px}
+.tb-sep{width:1px;height:20px;background:var(--border)}
+.tb-user{display:flex;align-items:center;gap:8px;color:var(--text2);font-size:13px;cursor:pointer}
+.tb-avatar{width:30px;height:30px;border-radius:50%;background:#e2e8f0;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--text2)}
+
+/* ── Page header ── */
+.hero{background:#fff;padding:20px 0 0;border-bottom:1px solid var(--border)}
+.hero-inner{max-width:980px;margin:0 auto;padding:0 20px 20px}
+.breadcrumb{display:flex;align-items:center;gap:5px;font-size:12px;margin-bottom:10px}
+.breadcrumb a{color:var(--muted);text-decoration:none;transition:color .15s}
+.breadcrumb a:hover{color:var(--blue)}
+.breadcrumb .sep{color:var(--border2)}
+.breadcrumb .cur{color:var(--text2);font-weight:500}
+.hero-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.hero h1{font-size:clamp(18px,3vw,22px);font-weight:700;color:var(--text);letter-spacing:-.02em;margin-bottom:4px}
+.hero p{font-size:13px;color:var(--muted);line-height:1.55;max-width:520px}
+.hero-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
+.hero-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;background:#f1f5f9;border:1px solid var(--border);font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.03em}
+
+/* ── Layout ── */
+.wrap{max-width:980px;margin:0 auto;padding:24px 20px 80px}
+
+/* ── Stat cards ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+@media(max-width:600px){.stats{grid-template-columns:1fr 1fr}}
+.scard{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px;box-shadow:var(--sh);border-left:3px solid transparent}
+.scard.blue{border-left-color:var(--blue)}
+.scard.green{border-left-color:var(--green)}
+.scard.amber{border-left-color:var(--amber)}
+.scard.slate{border-left-color:#94a3b8}
+.scard-lbl{font-size:10px;color:var(--muted);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.scard-val{font-size:24px;font-weight:700;color:var(--text)}
+.scard.green .scard-val{color:var(--green-dk)}
+.scard.amber .scard-val{color:var(--amber-dk)}
+.scard.slate .scard-val{color:var(--muted)}
+
+/* ── Main card ── */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--sh-xl);overflow:hidden}
+.card-body{padding:20px 24px 24px}
+
+/* ── Toolbar ── */
+.toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+.card-title{font-size:15px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px}
+.tb-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.search-wrap{display:flex;align-items:center;border:1.5px solid var(--border2);border-radius:var(--r);overflow:hidden;background:var(--white);transition:border-color .2s}
+.search-wrap:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,219,.08)}
+.search-wrap svg{margin:0 8px;color:var(--dim);flex-shrink:0}
+.search-wrap input{border:none;outline:none;background:transparent;padding:8px 8px 8px 0;font-size:13px;color:var(--text);width:210px;font-family:'Inter',sans-serif}
+.search-wrap input::placeholder{color:var(--dim)}
+.fsel{border:1.5px solid var(--border2);border-radius:var(--r);padding:8px 10px;font-size:12px;font-weight:500;background:var(--white);color:var(--text2);outline:none;font-family:'Inter',sans-serif;cursor:pointer;transition:border-color .2s}
+.fsel:focus{border-color:var(--blue)}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--r);border:1.5px solid var(--border2);background:var(--white);font-size:13px;font-weight:600;cursor:pointer;color:var(--text2);font-family:'Inter',sans-serif;transition:all .15s;white-space:nowrap}
+.btn:hover{border-color:var(--blue);color:var(--blue);background:#eff6ff}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 3px 10px rgba(26,86,219,.25)}
+.btn.primary:hover{background:var(--blue2);transform:translateY(-1px);box-shadow:0 5px 16px rgba(26,86,219,.35)}
+.btn.primary:active{transform:none}
+.btn.danger{background:var(--red-dk);border-color:var(--red-dk);color:#fff}
+.btn.danger:hover{background:#7f1d1d}
+.btn.secondary{color:var(--muted)}
+.btn.icon-only{padding:8px 10px}
+
+/* ── Table ── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}
+thead th{text-align:left;padding:10px 12px;border-bottom:1.5px solid var(--border);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);background:#f8fafc;white-space:nowrap}
+td{padding:12px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f8faff}
+tr.hl td{background:#fffbeb!important;transition:background 1s}
+.tid{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--blue);background:#eff6ff;padding:2px 7px;border-radius:5px;border:1px solid #bfdbfe;display:inline-block}
+.tid.territory{color:#7c3aed;background:#f5f3ff;border-color:#ddd6fe}
+.tname{font-weight:600;color:var(--text)}
+.tsub{font-size:11px;color:var(--dim);margin-top:2px}
+.tpill{display:inline-flex;padding:1px 8px;border-radius:6px;font-size:11px;font-weight:600;background:#f1f5f9;color:var(--muted);border:1px solid var(--border)}
+.row-info{font-size:11px;color:var(--dim);margin-top:12px}
+
+/* ── Action buttons ── */
+.act-btns{display:flex;gap:5px}
+.act-btn{width:30px;height:30px;border-radius:var(--r);border:1.5px solid var(--border2);background:var(--white);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:all .15s;flex-shrink:0}
+.act-btn:hover{transform:translateY(-1px);box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.act-btn.edit:hover{border-color:var(--blue);color:var(--blue);background:#eff6ff}
+.act-btn.del:hover{border-color:var(--red);color:var(--red);background:var(--red-lt)}
+
+/* ── Empty ── */
+.empty{padding:52px 24px;text-align:center;color:var(--dim)}
+.empty-icon{font-size:38px;margin-bottom:12px;opacity:.35}
+.empty p{font-size:14px;margin-bottom:8px}
+
+/* ── Modal overlay ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:200;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.overlay.show{display:flex}
+.modal{background:var(--white);border-radius:var(--r-xl);box-shadow:0 24px 60px rgba(0,0,0,.18);width:100%;overflow:hidden;animation:popIn .22s cubic-bezier(.34,1.3,.64,1)}
+.modal.wide{max-width:580px}
+.modal.sm{max-width:420px}
+@keyframes popIn{from{opacity:0;transform:scale(.96) translateY(6px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border)}
+.modal-hd h3{font-size:15px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
+.modal-hd h3 svg{color:var(--blue)}
+.modal-x{background:none;border:none;cursor:pointer;color:var(--dim);font-size:20px;line-height:1;padding:2px 4px;border-radius:4px;transition:all .15s}
+.modal-x:hover{color:var(--text);background:#f1f5f9}
+.modal-body{padding:22px;max-height:70vh;overflow-y:auto}
+.modal-ft{display:flex;justify-content:flex-end;gap:8px;padding:16px 22px;border-top:1px solid var(--border);background:#f8fafc}
+.del-overlay .modal-hd{background:var(--red-lt);border-bottom-color:#fecaca}
+.del-overlay .modal-hd h3{color:var(--red-dk)}
+.del-overlay .modal-hd h3 svg{color:var(--red)}
+
+/* ── Form ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:480px){.form-grid{grid-template-columns:1fr}}
+.field{margin-bottom:0}
+.field.full{grid-column:1/-1}
+.flbl{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);margin-bottom:6px}
+.flbl .req{color:var(--red);margin-left:2px}
+.finput,.fselect{width:100%;padding:10px 13px;border:1.5px solid var(--border2);border-radius:var(--r);font-size:13px;color:var(--text);background:var(--white);outline:none;font-family:'Inter',sans-serif;transition:border-color .2s,box-shadow .2s}
+.finput:focus,.fselect:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,219,.1)}
+.finput.err,.fselect.err{border-color:var(--red)}
+.ftextarea{width:100%;padding:10px 13px;border:1.5px solid var(--border2);border-radius:var(--r);font-size:13px;color:var(--text);background:var(--white);outline:none;font-family:'Inter',sans-serif;transition:border-color .2s,box-shadow .2s;resize:vertical;min-height:80px}
+.ftextarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,219,.1)}
+.fhint{font-size:11px;color:var(--dim);margin-top:4px}
+.ferr{font-size:11px;color:var(--red);margin-top:4px;display:none}
+.ferr.show{display:block}
+.fsec{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:14px 0 10px;border-bottom:1px solid var(--border);margin-bottom:14px;grid-column:1/-1}
+
+/* ── Delete confirm ── */
+.del-box{background:var(--red-lt);border:1px solid #fecaca;border-radius:var(--r);padding:12px 14px;margin:10px 0}
+.del-box strong{display:block;font-size:14px;color:var(--red-dk);margin-bottom:2px}
+.del-box span{font-size:11px;color:#b91c1c}
+
+/* ── Detail view ── */
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border)}
+.detail-cell{background:var(--white);padding:12px 16px}
+.detail-cell.full{grid-column:1/-1}
+.dlbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin-bottom:4px}
+.dval{font-size:13px;font-weight:500;color:var(--text);word-break:break-word}
+.dval.mono{font-family:'JetBrains Mono',monospace;font-size:12px}
+.dval.empty{color:var(--dim);font-style:italic;font-weight:400}
+
+/* ── Toast ── */
+.toast-wrap{position:fixed;bottom:24px;right:24px;z-index:300;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{padding:11px 16px;border-radius:var(--r-lg);font-size:13px;font-weight:500;color:#fff;box-shadow:var(--sh-lg);pointer-events:auto;animation:toastIn .3s ease;display:flex;align-items:center;gap:8px;max-width:340px}
+.toast.success{background:#065f46;border:1px solid var(--green)}
+.toast.danger{background:#7f1d1d;border:1px solid var(--red)}
+.toast.warning{background:#78350f;border:1px solid var(--amber)}
+.toast.info{background:#1e3a8a;border:1px solid var(--blue)}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.anim{animation:slideUp .4s ease both}
+</style>
+</head>
+<body>
+
+<!-- ── Topbar ── -->
+<div class="topbar">
+  <div class="tb-brand">
+    <div class="tb-logo">⛪</div>
+    <div class="tb-name">VCMIS <span>Member Portal</span></div>
+  </div>
+  <div class="tb-nav">
+    <a href="#">Dashboard</a>
+    <a href="#">Members</a>
+    <a href="#" class="active">Settings</a>
+  </div>
+  <div class="tb-right">
+    <div class="tb-sep"></div>
+    <div class="tb-user">
+      <div class="tb-avatar">AD</div>
+      <span>Admin</span>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--dim)"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+  </div>
+</div>
+
+<!-- ── Page Header ── -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="breadcrumb">
+      <a href="#">Home</a>
+      <span class="sep">/</span>
+      <a href="#">Settings</a>
+      <span class="sep">/</span>
+      <a href="#">Church Territory</a>
+      <span class="sep">/</span>
+      <span class="cur">Church Area</span>
+    </div>
+    <div class="hero-row">
+      <div>
+        <h1>Church Area Management</h1>
+        <p>Define and manage church areas within each territory. Each area belongs to a territory and has its own headquarters.</p>
+        <div class="hero-meta">
+          <span class="hero-chip">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+            tbl_churcharea
+          </span>
+          <span class="hero-chip">Linked: Territory (1.4)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Main content ── -->
+<div class="wrap">
+
+  <!-- Stat cards -->
+  <div class="stats anim">
+    <div class="scard blue"><div class="scard-lbl">Total Areas</div><div class="scard-val" id="stTotal">0</div></div>
+    <div class="scard green"><div class="scard-lbl">Territories Covered</div><div class="scard-val" id="stTerritories">0</div></div>
+    <div class="scard amber"><div class="scard-lbl">With HQ Set</div><div class="scard-val" id="stHQ">0</div></div>
+    <div class="scard slate"><div class="scard-lbl">With Comments</div><div class="scard-val" id="stComments">0</div></div>
+  </div>
+
+  <!-- Table card -->
+  <div class="card anim" style="animation-delay:.05s">
+    <div class="card-body">
+      <div class="toolbar">
+        <div class="card-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--blue)"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+          Area list
+        </div>
+        <div class="tb-controls">
+          <div class="search-wrap">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="srchBox" placeholder="Search ID, name, HQ, territory…" oninput="doFilter()">
+          </div>
+          <select class="fsel" id="filtTerritory" onchange="doFilter()">
+            <option value="">All territories</option>
+          </select>
+          <button class="btn primary" onclick="openAdd()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add area
+          </button>
+          <button class="btn icon-only" title="Refresh" onclick="reloadTable()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:105px">Area ID</th>
+              <th>Area Name</th>
+              <th style="width:170px">Headquarters</th>
+              <th style="width:120px">Territory</th>
+              <th style="width:180px">Captured</th>
+              <th style="width:90px">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tBody"></tbody>
+        </table>
+      </div>
+      <div class="row-info" id="rowInfo"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     ADD / EDIT MODAL
+═══════════════════════════════════════════════ -->
+<div class="overlay" id="formOverlay">
+  <div class="modal wide">
+    <div class="modal-hd">
+      <h3>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+        <span id="mTitleTxt">Add Area</span>
+      </h3>
+      <button class="modal-x" onclick="closeForm()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="mOrigID">
+      <div class="form-grid">
+
+        <!-- Section: Identity -->
+        <div class="fsec">Area Identity</div>
+
+        <div class="field">
+          <label class="flbl">Area ID <span class="req">*</span></label>
+          <input type="text" class="finput" id="mAreaID" placeholder="e.g. 02GH0511" maxlength="8"
+            style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+          <div class="fhint">8-character unique code (Territory ID + 2 digits)</div>
+          <div class="ferr" id="eAreaID">Area ID is required.</div>
+        </div>
+
+        <div class="field">
+          <label class="flbl">Area Name <span class="req">*</span></label>
+          <input type="text" class="finput" id="mAreaName" placeholder="e.g. Dwenewoho Area" maxlength="255">
+          <div class="ferr" id="eAreaName">Area name is required.</div>
+        </div>
+
+        <div class="field full">
+          <label class="flbl">Territory <span class="req">*</span></label>
+          <select class="fselect" id="mTerritoryID">
+            <option value="">— Select territory —</option>
+          </select>
+          <div class="ferr" id="eTerritoryID">Please select a territory.</div>
+        </div>
+
+        <!-- Section: Location -->
+        <div class="fsec">Location Details</div>
+
+        <div class="field full">
+          <label class="flbl">Area Headquarters <span class="req">*</span></label>
+          <input type="text" class="finput" id="mAreaHQ" placeholder="e.g. Dwenewoho Central" maxlength="255">
+          <div class="ferr" id="eAreaHQ">Headquarters location is required.</div>
+        </div>
+
+        <!-- Section: Notes -->
+        <div class="fsec">Additional Details</div>
+
+        <div class="field full">
+          <label class="flbl">Comments / Notes</label>
+          <textarea class="ftextarea" id="mAreaComment" placeholder="Optional notes about this area…"></textarea>
+        </div>
+
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn secondary" onclick="closeForm()">Cancel</button>
+      <button class="btn primary" onclick="saveRecord()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+        <span id="mSaveTxt">Save area</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     VIEW DETAIL MODAL
+═══════════════════════════════════════════════ -->
+<div class="overlay" id="viewOverlay">
+  <div class="modal wide">
+    <div class="modal-hd">
+      <h3>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+        Area Details
+      </h3>
+      <button class="modal-x" onclick="closeView()">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0">
+      <div class="detail-grid" id="detailGrid"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn secondary" onclick="closeView()">Close</button>
+      <button class="btn primary" onclick="editFromView()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit this record
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     DELETE CONFIRM MODAL
+═══════════════════════════════════════════════ -->
+<div class="overlay del-overlay" id="delOverlay">
+  <div class="modal sm">
+    <div class="modal-hd">
+      <h3>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        Delete Area
+      </h3>
+      <button class="modal-x" onclick="closeDel()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="dID">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:4px">You are about to permanently delete:</p>
+      <div class="del-box">
+        <strong id="dName">—</strong>
+        <span>This action cannot be undone.</span>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:10px">
+        All records linked to this area may be affected.
+      </p>
+    </div>
+    <div class="modal-ft">
+      <button class="btn secondary" onclick="closeDel()">Cancel</button>
+      <button class="btn danger" onclick="confirmDelete()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        Delete permanently
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   REFERENCE DATA — Territories (FK from tbl_churchterritory)
+   Swap with AJAX fetch in PHP implementation
+═══════════════════════════════════════════════════════════ */
+const TERRITORIES = [
+  { id: '02GH051', name: 'Greater Accra A Territory' },
+  { id: '02GH052', name: 'Greater Accra B Territory' },
+  { id: '03AS001', name: 'Abuja South Territory' },
+  { id: '01WR010', name: 'Western Region Territory' },
+  { id: '04EG003', name: 'Eastern Ghana Territory' },
+  { id: '06UK001', name: 'London North Territory' },
+];
+
+/* ═══════════════════════════════════════════════════════════
+   SAMPLE DATA  (matches tbl_churcharea schema)
+═══════════════════════════════════════════════════════════ */
+let rows = [
+  { id: '02GH0511', territoryID: '02GH051', name: 'Dwenewoho Area',       hq: 'Dwenewoho Central',   comment: '',                       capturedby: 'admin', capturedDate: '25 Feb 2019', updatedAt: null, updatedBy: null },
+  { id: '02GH0512', territoryID: '02GH051', name: 'Adenta Area',           hq: 'Adenta Municipal',    comment: 'Covers Adenta corridor.', capturedby: 'admin', capturedDate: '10 Mar 2019', updatedAt: null, updatedBy: null },
+  { id: '02GH0521', territoryID: '02GH052', name: 'Tema East Area',        hq: 'Tema Community 5',    comment: '',                       capturedby: 'admin', capturedDate: '01 Apr 2019', updatedAt: '05 Jan 2026', updatedBy: 'admin' },
+  { id: '03AS0011', territoryID: '03AS001', name: 'Garki Area',            hq: 'Garki II',            comment: '',                       capturedby: 'admin', capturedDate: '12 Jun 2020', updatedAt: null, updatedBy: null },
+  { id: '01WR0101', territoryID: '01WR010', name: 'Takoradi Central Area', hq: 'Market Circle',       comment: 'Coastal coverage.',       capturedby: 'admin', capturedDate: '20 Jan 2021', updatedAt: null, updatedBy: null },
+];
+
+let viewingID = null;
+
+/* ── Lookup helpers ── */
+function getTerritory(id){ return TERRITORIES.find(x => x.id === id) || { name: '—' }; }
+
+/* ═══════════════════════════════════════════════════════════
+   POPULATE DROPDOWNS
+═══════════════════════════════════════════════════════════ */
+function populateDropdowns(){
+  const mT  = document.getElementById('mTerritoryID');
+  const fT  = document.getElementById('filtTerritory');
+  TERRITORIES.forEach(t => {
+    const opt = `<option value="${t.id}">${t.id} — ${t.name}</option>`;
+    mT.innerHTML += opt;
+    fT.innerHTML += opt;
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STATS
+═══════════════════════════════════════════════════════════ */
+function updateStats(){
+  document.getElementById('stTotal').textContent      = rows.length;
+  document.getElementById('stTerritories').textContent = new Set(rows.map(r => r.territoryID)).size;
+  document.getElementById('stHQ').textContent          = rows.filter(r => r.hq.trim() !== '').length;
+  document.getElementById('stComments').textContent    = rows.filter(r => r.comment.trim() !== '').length;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RENDER TABLE
+═══════════════════════════════════════════════════════════ */
+function render(data){
+  const tb = document.getElementById('tBody');
+  const ri = document.getElementById('rowInfo');
+  ri.textContent = 'Showing ' + data.length + ' of ' + rows.length + ' records';
+
+  if(!data.length){
+    tb.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="empty-icon">🗂️</div><p>No area records found.</p><button class="btn primary" style="margin-top:8px" onclick="openAdd()">Add first area</button></div></td></tr>`;
+    return;
+  }
+
+  tb.innerHTML = data.map(r => {
+    const terr = getTerritory(r.territoryID);
+    return `<tr id="row-${r.id}">
+      <td>
+        <span class="tid" style="cursor:pointer" onclick="openView('${r.id}')" title="View details">${r.id}</span>
+      </td>
+      <td>
+        <div class="tname">${r.name}</div>
+        <div class="tsub">Captured: ${r.capturedDate} by ${r.capturedby}</div>
+      </td>
+      <td><div class="tsub">${r.hq || '<span style="color:var(--dim)">—</span>'}</div></td>
+      <td>
+        <span class="tid territory" title="${terr.name}">${r.territoryID}</span>
+      </td>
+      <td style="font-size:11px;color:var(--dim)">
+        ${r.updatedAt ? 'Updated ' + r.updatedAt + ' by ' + r.updatedBy : '<span style="color:var(--dim)">—</span>'}
+      </td>
+      <td>
+        <div class="act-btns">
+          <button class="act-btn" title="View" onclick="openView('${r.id}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+          <button class="act-btn edit" title="Edit" onclick="openEdit('${r.id}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="act-btn del" title="Delete" onclick="openDelete('${r.id}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FILTER
+═══════════════════════════════════════════════════════════ */
+function doFilter(){
+  const q  = document.getElementById('srchBox').value.toLowerCase().trim();
+  const t  = document.getElementById('filtTerritory').value;
+  const filtered = rows.filter(r => {
+    const mq = !q
+      || r.id.toLowerCase().includes(q)
+      || r.name.toLowerCase().includes(q)
+      || r.hq.toLowerCase().includes(q)
+      || r.territoryID.toLowerCase().includes(q);
+    const mt = t === '' || r.territoryID === t;
+    return mq && mt;
+  });
+  render(filtered);
+}
+
+function reloadTable(){
+  document.getElementById('srchBox').value    = '';
+  document.getElementById('filtTerritory').value = '';
+  render(rows);
+  showToast('Table refreshed', 'info');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HIGHLIGHT ROW
+═══════════════════════════════════════════════════════════ */
+function hlRow(id){
+  setTimeout(() => {
+    const r = document.getElementById('row-' + id);
+    if(!r) return;
+    r.classList.add('hl');
+    r.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    setTimeout(() => r.classList.remove('hl'), 2500);
+  }, 250);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FORM HELPERS
+═══════════════════════════════════════════════════════════ */
+function clearErrors(){
+  ['AreaID','AreaName','TerritoryID','AreaHQ'].forEach(k => {
+    const e = document.getElementById('e' + k);
+    const f = document.getElementById('m' + k);
+    if(e) e.classList.remove('show');
+    if(f) f.classList.remove('err');
+  });
+}
+
+function validate(){
+  let ok = true;
+  const fields = [
+    { k: 'AreaID',      msg: 'Area ID is required (max 8 chars).' },
+    { k: 'AreaName',    msg: 'Area name is required.' },
+    { k: 'TerritoryID', msg: 'Please select a territory.' },
+    { k: 'AreaHQ',      msg: 'Headquarters is required.' },
+  ];
+  fields.forEach(({ k, msg }) => {
+    const el   = document.getElementById('m' + k);
+    const errEl = document.getElementById('e' + k);
+    if(!el || !errEl) return;
+    if(!el.value.trim()){
+      el.classList.add('err');
+      errEl.textContent = msg;
+      errEl.classList.add('show');
+      ok = false;
+    }
+  });
+  return ok;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ADD MODAL
+═══════════════════════════════════════════════════════════ */
+function openAdd(){
+  document.getElementById('mOrigID').value          = '';
+  document.getElementById('mAreaID').value           = '';
+  document.getElementById('mAreaID').disabled        = false;
+  document.getElementById('mAreaName').value         = '';
+  document.getElementById('mTerritoryID').value      = '';
+  document.getElementById('mAreaHQ').value           = '';
+  document.getElementById('mAreaComment').value      = '';
+  document.getElementById('mTitleTxt').textContent   = 'Add Area';
+  document.getElementById('mSaveTxt').textContent    = 'Save area';
+  clearErrors();
+  document.getElementById('formOverlay').classList.add('show');
+  setTimeout(() => document.getElementById('mAreaID').focus(), 100);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   EDIT MODAL
+═══════════════════════════════════════════════════════════ */
+function openEdit(id){
+  const r = rows.find(x => x.id === id); if(!r) return;
+  document.getElementById('mOrigID').value         = id;
+  document.getElementById('mAreaID').value          = r.id;
+  document.getElementById('mAreaID').disabled       = true;
+  document.getElementById('mAreaName').value        = r.name;
+  document.getElementById('mTerritoryID').value     = r.territoryID;
+  document.getElementById('mAreaHQ').value          = r.hq;
+  document.getElementById('mAreaComment').value     = r.comment;
+  document.getElementById('mTitleTxt').textContent  = 'Edit Area — ' + id;
+  document.getElementById('mSaveTxt').textContent   = 'Update area';
+  clearErrors();
+  closeView();
+  document.getElementById('formOverlay').classList.add('show');
+  setTimeout(() => document.getElementById('mAreaName').focus(), 100);
+}
+
+function closeForm(){ document.getElementById('formOverlay').classList.remove('show'); }
+
+/* ═══════════════════════════════════════════════════════════
+   SAVE  (Add or Update)
+═══════════════════════════════════════════════════════════ */
+function saveRecord(){
+  if(!validate()) return;
+  const origID  = document.getElementById('mOrigID').value;
+  const isEdit  = !!origID;
+  const now     = new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+  const newID   = document.getElementById('mAreaID').value.trim().toUpperCase();
+
+  if(!isEdit){
+    if(rows.find(x => x.id === newID)){
+      showToast('Area ID "' + newID + '" already exists.', 'warning');
+      return;
+    }
+    rows.push({
+      id:          newID,
+      territoryID: document.getElementById('mTerritoryID').value,
+      name:        document.getElementById('mAreaName').value.trim(),
+      hq:          document.getElementById('mAreaHQ').value.trim(),
+      comment:     document.getElementById('mAreaComment').value.trim(),
+      capturedby:  'admin',
+      capturedDate: now,
+      updatedAt:   null,
+      updatedBy:   null,
+    });
+    closeForm(); doFilter(); updateStats();
+    showToast('"' + document.getElementById('mAreaName').value + '" added successfully.');
+    hlRow(newID);
+  } else {
+    const r = rows.find(x => x.id === origID);
+    r.territoryID = document.getElementById('mTerritoryID').value;
+    r.name        = document.getElementById('mAreaName').value.trim();
+    r.hq          = document.getElementById('mAreaHQ').value.trim();
+    r.comment     = document.getElementById('mAreaComment').value.trim();
+    r.updatedAt   = now;
+    r.updatedBy   = 'admin';
+    closeForm(); doFilter(); updateStats();
+    showToast('"' + r.name + '" updated successfully.');
+    hlRow(origID);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   VIEW DETAIL MODAL
+═══════════════════════════════════════════════════════════ */
+function openView(id){
+  const r = rows.find(x => x.id === id); if(!r) return;
+  viewingID = id;
+  const terr = getTerritory(r.territoryID);
+  document.getElementById('detailGrid').innerHTML = `
+    <div class="detail-cell"><div class="dlbl">Area ID</div><div class="dval mono">${r.id}</div></div>
+    <div class="detail-cell"><div class="dlbl">Territory</div><div class="dval"><span class="tid territory">${r.territoryID}</span> <span style="font-size:12px;color:var(--muted)">${terr.name}</span></div></div>
+    <div class="detail-cell full"><div class="dlbl">Area Name</div><div class="dval">${r.name}</div></div>
+    <div class="detail-cell full"><div class="dlbl">Headquarters</div><div class="dval">${r.hq || '<span class="empty">Not specified</span>'}</div></div>
+    <div class="detail-cell full"><div class="dlbl">Comments</div><div class="dval">${r.comment || '<span class="empty">No comments recorded.</span>'}</div></div>
+    <div class="detail-cell"><div class="dlbl">Captured by</div><div class="dval">${r.capturedby} on ${r.capturedDate}</div></div>
+    <div class="detail-cell"><div class="dlbl">Last updated</div><div class="dval">${r.updatedAt ? r.updatedAt + ' by ' + r.updatedBy : '<span class="empty">Never modified</span>'}</div></div>
+  `;
+  document.getElementById('viewOverlay').classList.add('show');
+}
+function closeView(){ document.getElementById('viewOverlay').classList.remove('show'); }
+function editFromView(){ closeView(); if(viewingID) openEdit(viewingID); }
+
+/* ═══════════════════════════════════════════════════════════
+   DELETE MODAL + CONFIRM
+═══════════════════════════════════════════════════════════ */
+function openDelete(id){
+  const r = rows.find(x => x.id === id); if(!r) return;
+  document.getElementById('dID').value   = id;
+  document.getElementById('dName').textContent = id + ' — ' + r.name;
+  document.getElementById('delOverlay').classList.add('show');
+}
+function closeDel(){ document.getElementById('delOverlay').classList.remove('show'); }
+function confirmDelete(){
+  const id   = document.getElementById('dID').value;
+  const r    = rows.find(x => x.id === id);
+  const name = r ? r.name : id;
+  rows = rows.filter(x => x.id !== id);
+  closeDel(); doFilter(); updateStats();
+  showToast('"' + name + '" permanently deleted.', 'danger');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════════════ */
+function showToast(msg, type='success'){
+  const w = document.getElementById('toastWrap');
+  const icons = {
+    success: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>',
+    danger:  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+    warning: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>',
+    info:    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+  };
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = (icons[type] || '') + msg;
+  w.appendChild(t);
+  setTimeout(() => {
+    t.style.opacity = '0'; t.style.transform = 'translateY(8px)'; t.style.transition = '.3s';
+    setTimeout(() => t.remove(), 300);
+  }, 3200);
+}
+
+/* ── Backdrop click closes modals ── */
+document.getElementById('formOverlay').addEventListener('click', e => { if(e.target === document.getElementById('formOverlay')) closeForm(); });
+document.getElementById('delOverlay').addEventListener('click',  e => { if(e.target === document.getElementById('delOverlay'))  closeDel(); });
+document.getElementById('viewOverlay').addEventListener('click', e => { if(e.target === document.getElementById('viewOverlay')) closeView(); });
+
+/* ── Init ── */
+populateDropdowns();
+render(rows);
+updateStats();
+</script>
+</body>
+</html>
