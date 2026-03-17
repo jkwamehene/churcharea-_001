@@ -45,11 +45,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .breadcrumb a:hover{color:var(--blue)}
 .breadcrumb .sep{color:var(--border2)}
 .breadcrumb .cur{color:var(--text2);font-weight:500}
-.hero-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
-.hero h1{font-size:clamp(18px,3vw,22px);font-weight:700;color:var(--text);letter-spacing:-.02em;margin-bottom:4px}
-.hero p{font-size:13px;color:var(--muted);line-height:1.55;max-width:520px}
-.hero-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
-.hero-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;background:#f1f5f9;border:1px solid var(--border);font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.03em}
 
 /* ── Layout ── */
 .wrap{max-width:980px;margin:0 auto;padding:24px 20px 80px}
@@ -97,7 +92,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 /* ── Table ── */
 .tbl-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:980px}
 thead th{text-align:left;padding:10px 12px;border-bottom:1.5px solid var(--border);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);background:#f8fafc;white-space:nowrap}
 td{padding:12px;border-bottom:1px solid var(--border);vertical-align:middle}
 tr:last-child td{border-bottom:none}
@@ -181,6 +176,27 @@ tr.hl td{background:#fffbeb!important;transition:background 1s}
 @keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 .anim{animation:slideUp .4s ease both}
+
+/* ── Responsive: hide some columns on small screens ── */
+@media (max-width: 768px){
+  /* Captured Time = 6th column */
+  table thead th:nth-child(6),
+  table tbody td:nth-child(6){
+    display:none;
+  }
+
+  /* Captured By = 7th column */
+  table thead th:nth-child(7),
+  table tbody td:nth-child(7){
+    display:none;
+  }
+
+  /* Last Updated = 8th column */
+  table thead th:nth-child(8),
+  table tbody td:nth-child(8){
+    display:none;
+  }
+}
 </style>
 </head>
 <body>
@@ -218,7 +234,8 @@ tr.hl td{background:#fffbeb!important;transition:background 1s}
       <span class="sep">/</span>
       <span class="cur">Church Area</span>
     </div>
-  
+  </div>
+</div>
 
 <!-- ── Main content ── -->
 <div class="wrap">
@@ -236,7 +253,7 @@ tr.hl td{background:#fffbeb!important;transition:background 1s}
     <div class="card-body">
       <div class="toolbar">
         <div class="card-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--blue)"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
           Area list
         </div>
         <div class="tb-controls">
@@ -262,10 +279,13 @@ tr.hl td{background:#fffbeb!important;transition:background 1s}
           <thead>
             <tr>
               <th style="width:105px">Area ID</th>
-              <th>Area Name</th>
-              <th style="width:170px">Headquarters</th>
-              <th style="width:120px">Territory</th>
-              <th style="width:180px">Captured</th>
+              <th style="min-width:160px">Area Name</th>
+              <th style="width:160px">Headquarters</th>
+              <th style="width:160px">Territory</th>
+              <th style="width:120px">Captured Date</th>
+              <th style="width:110px">Captured Time</th>
+              <th style="width:110px">Captured By</th>
+              <th style="width:100px">Last Updated</th>
               <th style="width:90px">Actions</th>
             </tr>
           </thead>
@@ -409,10 +429,6 @@ tr.hl td{background:#fffbeb!important;transition:background 1s}
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
-/* ═══════════════════════════════════════════════════════════
-   REFERENCE DATA — Territories (FK from tbl_churchterritory)
-   Swap with AJAX fetch in PHP implementation
-═══════════════════════════════════════════════════════════ */
 const TERRITORIES = [
   { id: '02GH051', name: 'Greater Accra A Territory' },
   { id: '02GH052', name: 'Greater Accra B Territory' },
@@ -422,55 +438,42 @@ const TERRITORIES = [
   { id: '06UK001', name: 'London North Territory' },
 ];
 
-/* ═══════════════════════════════════════════════════════════
-   SAMPLE DATA  (matches tbl_churcharea schema)
-═══════════════════════════════════════════════════════════ */
 let rows = [
-  { id: '02GH0511', territoryID: '02GH051', name: 'Dwenewoho Area',       hq: 'Dwenewoho Central',   comment: '',                       capturedby: 'admin', capturedDate: '25 Feb 2019', updatedAt: null, updatedBy: null },
-  { id: '02GH0512', territoryID: '02GH051', name: 'Adenta Area',           hq: 'Adenta Municipal',    comment: 'Covers Adenta corridor.', capturedby: 'admin', capturedDate: '10 Mar 2019', updatedAt: null, updatedBy: null },
-  { id: '02GH0521', territoryID: '02GH052', name: 'Tema East Area',        hq: 'Tema Community 5',    comment: '',                       capturedby: 'admin', capturedDate: '01 Apr 2019', updatedAt: '05 Jan 2026', updatedBy: 'admin' },
-  { id: '03AS0011', territoryID: '03AS001', name: 'Garki Area',            hq: 'Garki II',            comment: '',                       capturedby: 'admin', capturedDate: '12 Jun 2020', updatedAt: null, updatedBy: null },
-  { id: '01WR0101', territoryID: '01WR010', name: 'Takoradi Central Area', hq: 'Market Circle',       comment: 'Coastal coverage.',       capturedby: 'admin', capturedDate: '20 Jan 2021', updatedAt: null, updatedBy: null },
+  { id: '02GH0511', territoryID: '02GH051', name: 'Dwenewoho Area',       hq: 'Dwenewoho Central',   comment: '',                       capturedby: 'admin', capturedDate: '25 Feb 2019', capturedTime: '09:32', updatedAt: null, updatedBy: null },
+  { id: '02GH0512', territoryID: '02GH051', name: 'Adenta Area',           hq: 'Adenta Municipal',    comment: 'Covers Adenta corridor.', capturedby: 'admin', capturedDate: '10 Mar 2019', capturedTime: '15:18', updatedAt: null, updatedBy: null },
+  { id: '02GH0521', territoryID: '02GH052', name: 'Tema East Area',        hq: 'Tema Community 5',    comment: '',                       capturedby: 'admin', capturedDate: '01 Apr 2019', capturedTime: '11:05', updatedAt: '05 Jan 2026 10:00', updatedBy: 'admin' },
+  { id: '03AS0011', territoryID: '03AS001', name: 'Garki Area',            hq: 'Garki II',            comment: '',                       capturedby: 'admin', capturedDate: '12 Jun 2020', capturedTime: '19:50', updatedAt: null, updatedBy: null },
+  { id: '01WR0101', territoryID: '01WR010', name: 'Takoradi Central Area', hq: 'Market Circle',       comment: 'Coastal coverage.',       capturedby: 'admin', capturedDate: '20 Jan 2021', capturedTime: '10:10', updatedAt: null, updatedBy: null },
 ];
 
 let viewingID = null;
 
-/* ── Lookup helpers ── */
-function getTerritory(id){ return TERRITORIES.find(x => x.id === id) || { name: '—' }; }
+function getTerritory(id){ return TERRITORIES.find(x => x.id === id) || { id:'', name: '—' }; }
 
-/* ═══════════════════════════════════════════════════════════
-   POPULATE DROPDOWNS
-═══════════════════════════════════════════════════════════ */
 function populateDropdowns(){
   const mT  = document.getElementById('mTerritoryID');
   const fT  = document.getElementById('filtTerritory');
   TERRITORIES.forEach(t => {
-    const opt = `<option value="${t.id}">${t.id} — ${t.name}</option>`;
+    const opt = `<option value="${t.id}">${t.name}</option>`;
     mT.innerHTML += opt;
-    fT.innerHTML += opt;
+    fT.innerHTML += `<option value="${t.id}">${t.name}</option>`;
   });
 }
 
-/* ═══════════════════════════════════════════════════════════
-   STATS
-═══════════════════════════════════════════════════════════ */
 function updateStats(){
-  document.getElementById('stTotal').textContent      = rows.length;
+  document.getElementById('stTotal').textContent       = rows.length;
   document.getElementById('stTerritories').textContent = new Set(rows.map(r => r.territoryID)).size;
   document.getElementById('stHQ').textContent          = rows.filter(r => r.hq.trim() !== '').length;
   document.getElementById('stComments').textContent    = rows.filter(r => r.comment.trim() !== '').length;
 }
 
-/* ═══════════════════════════════════════════════════════════
-   RENDER TABLE
-═══════════════════════════════════════════════════════════ */
 function render(data){
   const tb = document.getElementById('tBody');
   const ri = document.getElementById('rowInfo');
   ri.textContent = 'Showing ' + data.length + ' of ' + rows.length + ' records';
 
   if(!data.length){
-    tb.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="empty-icon">🗂️</div><p>No area records found.</p><button class="btn primary" style="margin-top:8px" onclick="openAdd()">Add first area</button></div></td></tr>`;
+    tb.innerHTML = `<tr><td colspan="9"><div class="empty"><div class="empty-icon">🗂️</div><p>No area records found.</p><button class="btn primary" style="margin-top:8px" onclick="openAdd()">Add first area</button></div></td></tr>`;
     return;
   }
 
@@ -482,14 +485,16 @@ function render(data){
       </td>
       <td>
         <div class="tname">${r.name}</div>
-        <div class="tsub">Captured: ${r.capturedDate} by ${r.capturedby}</div>
       </td>
       <td><div class="tsub">${r.hq || '<span style="color:var(--dim)">—</span>'}</div></td>
       <td>
-        <span class="tid territory" title="${terr.name}">${r.territoryID}</span>
+        <span class="tpill" title="${terr.id}">${terr.name}</span>
       </td>
+      <td>${r.capturedDate || '<span style="color:var(--dim)">—</span>'}</td>
+      <td>${r.capturedTime || '<span style="color:var(--dim)">—</span>'}</td>
+      <td>${r.capturedby || '<span style="color:var(--dim)">—</span>'}</td>
       <td style="font-size:11px;color:var(--dim)">
-        ${r.updatedAt ? 'Updated ' + r.updatedAt + ' by ' + r.updatedBy : '<span style="color:var(--dim)">—</span>'}
+        ${r.updatedAt ? r.updatedAt + ' by ' + r.updatedBy : '<span style="color:var(--dim)">—</span>'}
       </td>
       <td>
         <div class="act-btns">
@@ -508,34 +513,32 @@ function render(data){
   }).join('');
 }
 
-/* ═══════════════════════════════════════════════════════════
-   FILTER
-═══════════════════════════════════════════════════════════ */
 function doFilter(){
   const q  = document.getElementById('srchBox').value.toLowerCase().trim();
-  const t  = document.getElementById('filtTerritory').value;
+  const tSelected  = document.getElementById('filtTerritory').value;
   const filtered = rows.filter(r => {
+    const terr = getTerritory(r.territoryID);
     const mq = !q
       || r.id.toLowerCase().includes(q)
       || r.name.toLowerCase().includes(q)
       || r.hq.toLowerCase().includes(q)
-      || r.territoryID.toLowerCase().includes(q);
-    const mt = t === '' || r.territoryID === t;
+      || r.territoryID.toLowerCase().includes(q)
+      || terr.name.toLowerCase().includes(q)
+      || (r.capturedDate && r.capturedDate.toLowerCase().includes(q))
+      || (r.capturedby && r.capturedby.toLowerCase().includes(q));
+    const mt = tSelected === '' || r.territoryID === tSelected;
     return mq && mt;
   });
   render(filtered);
 }
 
 function reloadTable(){
-  document.getElementById('srchBox').value    = '';
+  document.getElementById('srchBox').value       = '';
   document.getElementById('filtTerritory').value = '';
   render(rows);
   showToast('Table refreshed', 'info');
 }
 
-/* ═══════════════════════════════════════════════════════════
-   HIGHLIGHT ROW
-═══════════════════════════════════════════════════════════ */
 function hlRow(id){
   setTimeout(() => {
     const r = document.getElementById('row-' + id);
@@ -546,9 +549,6 @@ function hlRow(id){
   }, 250);
 }
 
-/* ═══════════════════════════════════════════════════════════
-   FORM HELPERS
-═══════════════════════════════════════════════════════════ */
 function clearErrors(){
   ['AreaID','AreaName','TerritoryID','AreaHQ'].forEach(k => {
     const e = document.getElementById('e' + k);
@@ -567,7 +567,7 @@ function validate(){
     { k: 'AreaHQ',      msg: 'Headquarters is required.' },
   ];
   fields.forEach(({ k, msg }) => {
-    const el   = document.getElementById('m' + k);
+    const el    = document.getElementById('m' + k);
     const errEl = document.getElementById('e' + k);
     if(!el || !errEl) return;
     if(!el.value.trim()){
@@ -580,38 +580,32 @@ function validate(){
   return ok;
 }
 
-/* ═══════════════════════════════════════════════════════════
-   ADD MODAL
-═══════════════════════════════════════════════════════════ */
 function openAdd(){
   document.getElementById('mOrigID').value          = '';
-  document.getElementById('mAreaID').value           = '';
-  document.getElementById('mAreaID').disabled        = false;
-  document.getElementById('mAreaName').value         = '';
-  document.getElementById('mTerritoryID').value      = '';
-  document.getElementById('mAreaHQ').value           = '';
-  document.getElementById('mAreaComment').value      = '';
-  document.getElementById('mTitleTxt').textContent   = 'Add Area';
-  document.getElementById('mSaveTxt').textContent    = 'Save area';
+  document.getElementById('mAreaID').value          = '';
+  document.getElementById('mAreaID').disabled       = false;
+  document.getElementById('mAreaName').value        = '';
+  document.getElementById('mTerritoryID').value     = '';
+  document.getElementById('mAreaHQ').value          = '';
+  document.getElementById('mAreaComment').value     = '';
+  document.getElementById('mTitleTxt').textContent  = 'Add Area';
+  document.getElementById('mSaveTxt').textContent   = 'Save area';
   clearErrors();
   document.getElementById('formOverlay').classList.add('show');
   setTimeout(() => document.getElementById('mAreaID').focus(), 100);
 }
 
-/* ═══════════════════════════════════════════════════════════
-   EDIT MODAL
-═══════════════════════════════════════════════════════════ */
 function openEdit(id){
   const r = rows.find(x => x.id === id); if(!r) return;
   document.getElementById('mOrigID').value         = id;
-  document.getElementById('mAreaID').value          = r.id;
-  document.getElementById('mAreaID').disabled       = true;
-  document.getElementById('mAreaName').value        = r.name;
-  document.getElementById('mTerritoryID').value     = r.territoryID;
-  document.getElementById('mAreaHQ').value          = r.hq;
-  document.getElementById('mAreaComment').value     = r.comment;
-  document.getElementById('mTitleTxt').textContent  = 'Edit Area — ' + id;
-  document.getElementById('mSaveTxt').textContent   = 'Update area';
+  document.getElementById('mAreaID').value         = r.id;
+  document.getElementById('mAreaID').disabled      = true;
+  document.getElementById('mAreaName').value       = r.name;
+  document.getElementById('mTerritoryID').value    = r.territoryID;
+  document.getElementById('mAreaHQ').value         = r.hq;
+  document.getElementById('mAreaComment').value    = r.comment;
+  document.getElementById('mTitleTxt').textContent = 'Edit Area — ' + id;
+  document.getElementById('mSaveTxt').textContent  = 'Update area';
   clearErrors();
   closeView();
   document.getElementById('formOverlay').classList.add('show');
@@ -620,14 +614,15 @@ function openEdit(id){
 
 function closeForm(){ document.getElementById('formOverlay').classList.remove('show'); }
 
-/* ═══════════════════════════════════════════════════════════
-   SAVE  (Add or Update)
-═══════════════════════════════════════════════════════════ */
 function saveRecord(){
   if(!validate()) return;
   const origID  = document.getElementById('mOrigID').value;
   const isEdit  = !!origID;
-  const now     = new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+
+  const now     = new Date();
+  const dateStr = now.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+  const timeStr = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', hour12:false });
+
   const newID   = document.getElementById('mAreaID').value.trim().toUpperCase();
 
   if(!isEdit){
@@ -636,47 +631,46 @@ function saveRecord(){
       return;
     }
     rows.push({
-      id:          newID,
-      territoryID: document.getElementById('mTerritoryID').value,
-      name:        document.getElementById('mAreaName').value.trim(),
-      hq:          document.getElementById('mAreaHQ').value.trim(),
-      comment:     document.getElementById('mAreaComment').value.trim(),
-      capturedby:  'admin',
-      capturedDate: now,
-      updatedAt:   null,
-      updatedBy:   null,
+      id:           newID,
+      territoryID:  document.getElementById('mTerritoryID').value,
+      name:         document.getElementById('mAreaName').value.trim(),
+      hq:           document.getElementById('mAreaHQ').value.trim(),
+      comment:      document.getElementById('mAreaComment').value.trim(),
+      capturedby:   'admin',
+      capturedDate: dateStr,
+      capturedTime: timeStr,
+      updatedAt:    null,
+      updatedBy:    null,
     });
     closeForm(); doFilter(); updateStats();
     showToast('"' + document.getElementById('mAreaName').value + '" added successfully.');
     hlRow(newID);
   } else {
     const r = rows.find(x => x.id === origID);
-    r.territoryID = document.getElementById('mTerritoryID').value;
-    r.name        = document.getElementById('mAreaName').value.trim();
-    r.hq          = document.getElementById('mAreaHQ').value.trim();
-    r.comment     = document.getElementById('mAreaComment').value.trim();
-    r.updatedAt   = now;
-    r.updatedBy   = 'admin';
+    r.territoryID  = document.getElementById('mTerritoryID').value;
+    r.name         = document.getElementById('mAreaName').value.trim();
+    r.hq           = document.getElementById('mAreaHQ').value.trim();
+    r.comment      = document.getElementById('mAreaComment').value.trim();
+    r.updatedAt    = dateStr + ' ' + timeStr;
+    r.updatedBy    = 'admin';
     closeForm(); doFilter(); updateStats();
     showToast('"' + r.name + '" updated successfully.');
     hlRow(origID);
   }
 }
 
-/* ═══════════════════════════════════════════════════════════
-   VIEW DETAIL MODAL
-═══════════════════════════════════════════════════════════ */
 function openView(id){
   const r = rows.find(x => x.id === id); if(!r) return;
   viewingID = id;
   const terr = getTerritory(r.territoryID);
+  const capturedStr = `${r.capturedDate || '—'}${r.capturedTime ? ' • ' + r.capturedTime : ''}`;
   document.getElementById('detailGrid').innerHTML = `
     <div class="detail-cell"><div class="dlbl">Area ID</div><div class="dval mono">${r.id}</div></div>
-    <div class="detail-cell"><div class="dlbl">Territory</div><div class="dval"><span class="tid territory">${r.territoryID}</span> <span style="font-size:12px;color:var(--muted)">${terr.name}</span></div></div>
+    <div class="detail-cell"><div class="dlbl">Territory</div><div class="dval"><span class="tpill">${terr.name}</span> <span style="font-size:12px;color:var(--muted)">(${terr.id})</span></div></div>
     <div class="detail-cell full"><div class="dlbl">Area Name</div><div class="dval">${r.name}</div></div>
     <div class="detail-cell full"><div class="dlbl">Headquarters</div><div class="dval">${r.hq || '<span class="empty">Not specified</span>'}</div></div>
     <div class="detail-cell full"><div class="dlbl">Comments</div><div class="dval">${r.comment || '<span class="empty">No comments recorded.</span>'}</div></div>
-    <div class="detail-cell"><div class="dlbl">Captured by</div><div class="dval">${r.capturedby} on ${r.capturedDate}</div></div>
+    <div class="detail-cell"><div class="dlbl">Captured by</div><div class="dval">${r.capturedby} on ${capturedStr}</div></div>
     <div class="detail-cell"><div class="dlbl">Last updated</div><div class="dval">${r.updatedAt ? r.updatedAt + ' by ' + r.updatedBy : '<span class="empty">Never modified</span>'}</div></div>
   `;
   document.getElementById('viewOverlay').classList.add('show');
@@ -684,9 +678,6 @@ function openView(id){
 function closeView(){ document.getElementById('viewOverlay').classList.remove('show'); }
 function editFromView(){ closeView(); if(viewingID) openEdit(viewingID); }
 
-/* ═══════════════════════════════════════════════════════════
-   DELETE MODAL + CONFIRM
-═══════════════════════════════════════════════════════════ */
 function openDelete(id){
   const r = rows.find(x => x.id === id); if(!r) return;
   document.getElementById('dID').value   = id;
@@ -703,9 +694,6 @@ function confirmDelete(){
   showToast('"' + name + '" permanently deleted.', 'danger');
 }
 
-/* ═══════════════════════════════════════════════════════════
-   TOAST
-═══════════════════════════════════════════════════════════ */
 function showToast(msg, type='success'){
   const w = document.getElementById('toastWrap');
   const icons = {
@@ -724,12 +712,10 @@ function showToast(msg, type='success'){
   }, 3200);
 }
 
-/* ── Backdrop click closes modals ── */
 document.getElementById('formOverlay').addEventListener('click', e => { if(e.target === document.getElementById('formOverlay')) closeForm(); });
 document.getElementById('delOverlay').addEventListener('click',  e => { if(e.target === document.getElementById('delOverlay'))  closeDel(); });
 document.getElementById('viewOverlay').addEventListener('click', e => { if(e.target === document.getElementById('viewOverlay')) closeView(); });
 
-/* ── Init ── */
 populateDropdowns();
 render(rows);
 updateStats();
